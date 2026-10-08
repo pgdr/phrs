@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -e
+
+FNAME=$1
+shift
+
+WEAK=false
+if [[ "${1:-}" == "--weak" ]]; then
+    WEAK=true
+    shift
+fi
+
+echo
+echo
+echo "============ $FNAME ============="
+echo "CMD = $@"
+echo
+date -R
+echo
+
+ph "$@" < "$FNAME" > _tmp_ph
+./phrs "$@" < "$FNAME" > _tmp_phrs
+
+
+if $WEAK; then
+    if diff -w \
+        <(tr -d '-' < _tmp_ph | sed -E 's/\.0([[:space:]]|$)/\1/g') \
+        <(tr -d '-' < _tmp_phrs | sed -E 's/\.0([[:space:]]|$)/\1/g'); then
+        echo "ok (weak)"
+    else
+        echo "error (weak)"
+        exit 1
+    fi
+else
+    if diff _tmp_ph _tmp_phrs; then
+        echo "ok"
+    else
+        echo "error"
+        exit 1
+    fi
+fi

@@ -1,0 +1,11 @@
+id,name,age,score,city,note
+1,Alice,30,91.5,Oslo,hello
+2,Bob,25,87.0,Bergen,"hello, world"
+3,Charlie,,92.3,Trondheim,
+4,Alice,30,91.5,Oslo,"quoted ""text"""
+5,David,42,,Stavanger,
+6,Eve,25,87.0,Bergen,"multiple words"
+7,Frank,0,0.0,Oslo,zero
+8,Grace,-5,-12.75,Tromsø,negative
+9,Henry,100,99.99,Ålesund,unicode
+10,Ivy,25,87.0,Bergen,duplicate

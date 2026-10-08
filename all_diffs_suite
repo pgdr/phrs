@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+set -e
+
+./ph_diff data/a.csv columns
+./ph_diff data/a.csv columns y x
+./ph_diff data/a.csv head
+./ph_diff data/a.csv head -2
+./ph_diff data/a.csv head 1
+./ph_diff data/a.csv head 12
+./ph_diff data/a.csv head 3
+./ph_diff data/a.csv rename x z
+./ph_diff data/a.csv shape
+./ph_diff data/a.csv sort x
+./ph_diff data/a.csv sort y
+./ph_diff data/a.csv tail -2
+./ph_diff data/a.csv tail 3
+
+./ph_diff data/complex.csv columns
+./ph_diff data/complex.csv columns age score
+./ph_diff data/complex.csv columns age score note
+./ph_diff data/complex.csv columns name score
+./ph_diff data/complex.csv columns note name city
+./ph_diff data/complex.csv head
+./ph_diff data/complex.csv head 3
+./ph_diff data/complex.csv query "city=='Oslo'"
+./ph_diff data/complex.csv query 'age>30'
+./ph_diff data/complex.csv query 'score<0'
+./ph_diff data/complex.csv query 'score<90'
+./ph_diff data/complex.csv query 'score<=10'
+./ph_diff data/complex.csv query 'score>=90'
+./ph_diff data/complex.csv shape
+./ph_diff data/complex.csv slugify
+./ph_diff data/complex.csv sort age
+./ph_diff data/complex.csv sort city
+./ph_diff data/complex.csv sort name
+./ph_diff data/complex.csv sort score
+./ph_diff data/complex.csv strip name
+./ph_diff data/complex.csv tail
+./ph_diff data/complex.csv tail 3
+
+./ph_diff data/f.csv eval 'c = a + b'
+./ph_diff data/f.csv eval 'c = a * b'
+./ph_diff data/f.csv eval 'c = a / b'
+./ph_diff data/f.csv eval 'c = a ** 2'
+./ph_diff data/f.csv eval 'c = (a + b) * 2'
+./ph_diff data/f.csv eval 'c = a * 1.5 + 3'
+./ph_diff data/f.csv eval 'a = a + b'
+
+./ph_diff data/f.csv eval 'a**2'
+# ./ph_diff data/f.csv eval 'a + b'
+
+./ph_diff data/f.csv query 'a>4'
+./ph_diff data/f.csv query 'a >= 4'
+./ph_diff data/f.csv query 'a<10'
+./ph_diff data/f.csv query 'a <= 10'
+./ph_diff data/f.csv query 'a==8'
+./ph_diff data/f.csv query 'a != 8'
+./ph_diff data/f.csv query 'a>100'
+./ph_diff data/f.csv query 'a > 4.5'
+
+./ph_diff data/a.csv --weak show --no-index
+./ph_diff data/complex.csv --weak show --no-index
+
+./ph_diff data/a.csv --weak show
+./ph_diff data/f.csv --weak show
+./ph_diff data/complex.csv --weak show
+
+./ph_diff data/a.csv cat
+./ph_diff data/a.csv cat data/a.csv data/f.csv
+./ph_diff data/a.csv cat data/a.csv data/f.csv --axis=index
+./ph_diff data/a.csv cat data/a.csv data/f.csv --axis=columns
+./ph_diff data/a.csv merge data/left.csv data/right.csv
+./ph_diff data/a.csv merge data/left.csv data/right.csv --how=outer
+./ph_diff data/a.csv merge data/left.csv data/right.csv --on=key1 --how=outer

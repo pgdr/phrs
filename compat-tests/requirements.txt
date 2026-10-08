@@ -1,0 +1,3 @@
+pytest>=8,<10
+# Install a locally checked-out pgdr/ph and its pinned pandas dependencies separately.
+# Pin pandas==3.0.6 only after verifying the target Python environment supports it.
