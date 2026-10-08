@@ -1,0 +1,45 @@
+name: phrs tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install Python ph
+        run: python -m pip install ph
+
+      - name: Build phrs
+        run: cargo build
+
+      - name: Test with Cargo
+        run: cargo test
+
+      - name: Lint with Clippy
+        run: cargo clippy --all-targets
+
+      - name: Compare against Python ph
+        run: |
+          chmod +x ./all_diffs_suite ./ph_diff
+          ./all_diffs_suite
