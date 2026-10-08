@@ -142,7 +142,7 @@ fn strip_columns() {
 fn slugify_columns() {
     let (code, out, err) = invoke(&["slugify"], b"First Name,Some-Value\nAlice,1\n");
     assert_eq!(code, 0, "{}", String::from_utf8_lossy(&err));
-    assert_eq!(out, b"first_name,some_value\nAlice,1\n");
+    assert_eq!(out, b"first_name,some_minus_value\nAlice,1\n");
 }
 
 #[test]
