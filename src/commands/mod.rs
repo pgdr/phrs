@@ -1,5 +1,7 @@
 pub mod cat;
 pub mod columns;
+pub mod date;
+pub mod diff;
 pub mod eval;
 pub mod head;
 pub mod merge;
@@ -40,6 +42,39 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
             Ok(())
         }
         "columns" => inv.no_options(),
+        "date" => {
+            inv.arity(1, 1)?;
+            if let Some((key, _)) = inv
+                .kwargs
+                .iter()
+                .find(|(key, _)| !matches!(key.as_str(), "format" | "dayfirst" | "utc"))
+            {
+                return Err(PhError::new(format!("Unknown option --{key}.")));
+            }
+            if let Some(key) = inv
+                .flags
+                .iter()
+                .find(|key| !matches!(key.as_str(), "dayfirst" | "utc"))
+            {
+                return Err(PhError::new(format!("Unknown flag --{key}.")));
+            }
+            Ok(())
+        }
+
+        "diff" => {
+            if let Some((key, _)) = inv
+                .kwargs
+                .iter()
+                .find(|(key, _)| key != "periods" && key != "axis")
+            {
+                return Err(PhError::new(format!("Unknown option --{key}.")));
+            }
+            if let Some(flag) = inv.flags.first() {
+                return Err(PhError::new(format!("Unknown flag --{flag}.")));
+            }
+            Ok(())
+        }
+
         "head" | "tail" => {
             inv.no_options()?;
             inv.arity(0, 1)
@@ -92,6 +127,8 @@ pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
     let df = io::read_csv(data)?;
     match inv.command.as_str() {
         "columns" => columns::run(df, inv),
+        "date" => date::run(df, inv),
+        "diff" => diff::run(df, inv),
         "head" => head::run(df, inv),
         "tail" => tail::run(df, inv),
         "rename" => rename::run(df, inv),

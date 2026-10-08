@@ -73,3 +73,13 @@ set -e
 ./ph_diff data/a.csv merge data/left.csv data/right.csv
 ./ph_diff data/a.csv merge data/left.csv data/right.csv --how=outer
 ./ph_diff data/a.csv merge data/left.csv data/right.csv --on=key1 --how=outer
+
+./ph_diff data/f.csv diff
+./ph_diff data/f.csv diff a
+./ph_diff data/f.csv diff a b
+./ph_diff data/f.csv diff a --periods=2
+./ph_diff data/f.csv diff --periods=-1
+./ph_diff data/f.csv diff --axis=1
+./ph_diff data/usa.csv diff cases
+
+./ph_diff data/usa.csv date dateRep

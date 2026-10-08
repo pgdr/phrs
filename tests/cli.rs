@@ -258,3 +258,53 @@ fn merge_on_common_key_and_different_keys() {
     assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
     assert_eq!(stdout, b"key,A,B\n1,a,\n2,b,c\n3,,d\n");
 }
+
+#[test]
+fn diff_all_columns() {
+    let (code, stdout, stderr) = invoke(&["diff"], CSV);
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"x,y\n,\n1.0,1.0\n1.0,1.0\n");
+}
+
+#[test]
+fn diff_selected_column() {
+    let (code, stdout, stderr) = invoke(&["diff", "x"], CSV);
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"x,y\n,8\n1.0,9\n1.0,10\n");
+}
+
+#[test]
+fn diff_periods_two() {
+    let (code, stdout, stderr) = invoke(&["diff", "--periods=2"], CSV);
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"x,y\n,\n,\n2.0,2.0\n");
+}
+
+#[test]
+fn diff_negative_periods() {
+    let (code, stdout, stderr) = invoke(&["diff", "--periods=-1"], CSV);
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"x,y\n-1.0,-1.0\n-1.0,-1.0\n,\n");
+}
+
+#[test]
+fn diff_axis_columns() {
+    let (code, stdout, stderr) = invoke(&["diff", "--axis=1"], CSV);
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"x,y\n,5\n,5\n,5\n");
+}
+
+#[test]
+fn diff_missing_column() {
+    let (code, stdout, stderr) = invoke(&["diff", "absent"], CSV);
+    assert_ne!(code, 0);
+    assert!(stdout.is_empty());
+    assert_eq!(stderr, b"ph diff: Unknown column absent\n");
+}
+
+#[test]
+fn diff_invalid_axis() {
+    let (code, stdout, _) = invoke(&["diff", "--axis=3"], CSV);
+    assert_ne!(code, 0);
+    assert!(stdout.is_empty());
+}
