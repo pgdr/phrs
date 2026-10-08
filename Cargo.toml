@@ -5,6 +5,7 @@ edition = "2024"
 description = "A tabular data shell tool compatible with ph"
 license = "MIT"
 repository = "https://github.com/pgdr/phrs"
+readme = "README.md"
 
 [lib]
 name = "phrs"
