@@ -103,6 +103,27 @@ cat a.csv | phrs eval 'z = (x + y) / 2'
 cat a.csv | phrs eval 'x**2'       # Output only the computed column
 ```
 
+### Compute differences with `diff`
+
+`diff` subtracts the previous row from the current row. By default it processes all columns; specify column names to limit the operation. Use `--periods` to change the offset or `--axis=1` to compute differences across columns.
+
+```bash
+cat a.csv | phrs diff x
+cat a.csv | phrs diff x --periods=2
+cat a.csv | phrs diff --axis=1
+```
+
+### Parse dates with `date`
+
+`date` converts a column to ISO-formatted dates. Numeric values are interpreted as days since the Unix epoch, or as Unix timestamps in seconds with `--utc=True`. String dates can use an explicit format or day-first parsing.
+
+```bash
+cat a.csv | phrs date x
+cat dates.csv | phrs date recorded --format="%d/%m/%Y"
+cat dates.csv | phrs date recorded --dayfirst=True
+cat timestamps.csv | phrs date timestamp --utc=True
+```
+
 ### Display a table
 
 ```bash
