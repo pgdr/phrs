@@ -36,7 +36,8 @@ pub fn execute_io(
 ) -> Result<(), error::PhError> {
     commands::validate(&invocation)?;
     let mut bytes = Vec::new();
-    if invocation.command != "merge"
+    if invocation.command != "open"
+        && invocation.command != "merge"
         && !(invocation.command == "cat" && !invocation.args.is_empty())
     {
         input.read_to_end(&mut bytes)?;

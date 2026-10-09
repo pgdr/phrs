@@ -28,7 +28,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install Python ph
-        run: python -m pip install ph
+        run: python -m pip install openpyxl ph
 
       - name: Build phrs
         run: cargo build

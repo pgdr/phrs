@@ -94,3 +94,5 @@ set -e
 ./ph_diff data/a.csv slice -1:
 ./ph_diff data/a.csv slice :
 ./ph_diff data/a.csv slice 1:1
+
+./ph_diff data/a.csv open excel data/sheet.xlsx

@@ -346,3 +346,64 @@ fn slice_rejects_invalid_input() {
     let (code, _, _) = invoke(&["slice", ":", "--nope"], CSV);
     assert_ne!(code, 0);
 }
+
+fn excel_fixture() -> String {
+    format!(
+        "{}/tests/fixtures/workbook.xlsx",
+        env!("CARGO_MANIFEST_DIR")
+    )
+}
+
+#[test]
+fn open_excel_first_worksheet() {
+    let file = excel_fixture();
+    // Workbook commands must not parse or depend on standard input.
+    let (code, stdout, stderr) = invoke(&["open", "excel", &file], b"not,csv\n");
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(
+        stdout,
+        "name,quantity,description,active\nÅse,3,\"a,\"\"b\"\"\",true\nBob,1.25,\"line1\nline2\",false\nCleo,,plain,true\n".as_bytes()
+    );
+}
+
+#[test]
+fn open_excel_named_worksheet() {
+    let file = excel_fixture();
+    let (code, stdout, stderr) = invoke(&["open", "excel", &file, "--sheet=Other"], b"");
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"id,value\n1,alternative\n2,two\n");
+}
+
+#[test]
+fn open_excel_missing_sheet_is_an_error() {
+    let file = excel_fixture();
+    let (code, stdout, stderr) = invoke(&["open", "excel", &file, "--sheet=Unknown"], b"");
+    assert_ne!(code, 0);
+    assert!(stdout.is_empty());
+    assert!(String::from_utf8_lossy(&stderr).contains("Worksheet \"Unknown\" not found"));
+}
+
+#[test]
+fn open_excel_invalid_arguments_are_errors() {
+    for args in [
+        vec!["open", "excel"],
+        vec!["open", "csv", "file.csv"],
+        vec!["open", "excel", "file.xlsx", "--typo=1"],
+        vec!["open", "excel", "file.xlsx", "--sheet"],
+    ] {
+        let (code, stdout, _) = invoke(&args, b"");
+        assert_ne!(code, 0, "{args:?}");
+        assert!(stdout.is_empty(), "{args:?}");
+    }
+}
+
+#[test]
+fn open_excel_invalid_file_is_an_error() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("bad.xls");
+    std::fs::write(&path, b"not an Excel workbook").unwrap();
+    let (code, stdout, stderr) = invoke(&["open", "excel", path.to_str().unwrap()], b"");
+    assert_ne!(code, 0);
+    assert!(stdout.is_empty());
+    assert!(String::from_utf8_lossy(&stderr).contains("Cannot open Excel workbook"));
+}

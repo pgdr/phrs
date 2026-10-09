@@ -5,6 +5,7 @@ pub mod diff;
 pub mod eval;
 pub mod head;
 pub mod merge;
+pub mod open;
 pub mod query;
 pub mod rename;
 pub mod shape;
@@ -19,6 +20,22 @@ use crate::{cli::Invocation, error::PhError, io};
 
 pub fn validate(inv: &Invocation) -> Result<(), PhError> {
     match inv.command.as_str() {
+        "open" => {
+            inv.arity(2, 2)?;
+            if inv.args[0] != "excel" {
+                return Err(PhError::new(format!(
+                    "Unknown open format: {}.",
+                    inv.args[0]
+                )));
+            }
+            if let Some((key, _)) = inv.kwargs.iter().find(|(key, _)| key != "sheet") {
+                return Err(PhError::new(format!("Unknown option --{key}.")));
+            }
+            if let Some(flag) = inv.flags.first() {
+                return Err(PhError::new(format!("Unknown flag --{flag}.")));
+            }
+            Ok(())
+        }
         "cat" => {
             for (key, _) in &inv.kwargs {
                 if key != "axis" {
@@ -124,6 +141,9 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
 }
 
 pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
+    if inv.command == "open" {
+        return open::run(inv);
+    }
     if inv.command == "cat" {
         return cat::run(inv, data);
     }

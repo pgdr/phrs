@@ -6,6 +6,8 @@ description = "A tabular data shell tool compatible with ph"
 license = "MIT"
 repository = "https://github.com/pgdr/phrs"
 readme = "README.md"
+categories = ["command-line-utilities", "text-processing"]
+keywords = ["csv", "excel", "dataframe", "polars", "cli"]
 
 [lib]
 name = "phrs"
@@ -27,6 +29,9 @@ polars = { version = "0.55.2", default-features = false, features = [
 ]}
 
 chrono = { version = "0.4", default-features = false, features = ["std"] }
+
+calamine = { version = "0.36.1", default-features = false, features = ["chrono"] }
+csv = "1"
 
 tabulate-rs = "=0.1.0"
 serde_json = "1"

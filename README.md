@@ -134,6 +134,23 @@ cat a.csv | phrs show
 cat a.csv | phrs show --no-index  # Omit the generated row index
 ```
 
+### Open Excel workbooks
+
+`open excel` reads the first worksheet of an `.xls`, `.xlsx`, `.xlsm`, or
+`.xlsb` file and writes CSV to standard output. Use `--sheet=NAME` to select
+another worksheet. Unlike ordinary commands, it reads the named file, not stdin.
+
+```bash
+phrs open excel data.xls
+phrs open excel data.xlsx --sheet=Measurements
+phrs open excel data.xls | phrs head 10
+```
+
+Cells are exported as values: dates use ISO notation, blank cells become empty
+fields, and commas, quotes, and newlines are CSV-escaped. Excel cell formatting
+(such as currency symbols or formatted leading zeros) is not reproduced.
+Formulas are **not evaluated**; their cached results, if available, are exported.
+
 ### Concatenate CSV files
 
 Unlike most commands, `cat` takes filenames. With no filenames, it reads standard input.
