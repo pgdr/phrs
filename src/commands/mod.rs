@@ -8,6 +8,8 @@ pub mod merge;
 pub mod open;
 pub mod query;
 pub mod rename;
+pub mod rolling;
+pub mod statistics;
 pub mod shape;
 pub mod show;
 pub mod slice;
@@ -55,6 +57,35 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
             inv.arity(2, 2)?;
             for (key, _) in &inv.kwargs {
                 if !["how", "on", "left", "right"].contains(&key.as_str()) {
+                    return Err(PhError::new(format!("Unknown option --{key}.")));
+                }
+            }
+            if let Some(flag) = inv.flags.first() {
+                return Err(PhError::new(format!("Unknown flag --{flag}.")));
+            }
+            Ok(())
+        }
+        "sum" | "mean" | "median" | "std" | "min" | "max" => {
+            for (key, _) in &inv.kwargs {
+                if !["axis", "skipna", "numeric_only", "ddof", "min_count"].contains(&key.as_str()) {
+                    return Err(PhError::new(format!("Unknown option --{key}.")));
+                }
+                if key == "ddof" && inv.command != "std" {
+                    return Err(PhError::new("--ddof is only supported for std."));
+                }
+                if key == "min_count" && inv.command != "sum" {
+                    return Err(PhError::new("--min_count is only supported for sum."));
+                }
+            }
+            if let Some(flag) = inv.flags.first() {
+                return Err(PhError::new(format!("Unknown flag --{flag}.")));
+            }
+            Ok(())
+        }
+        "rolling" => {
+            inv.arity(1, usize::MAX)?;
+            for (key, _) in &inv.kwargs {
+                if !["how", "min_periods", "center", "ddof"].contains(&key.as_str()) {
                     return Err(PhError::new(format!("Unknown option --{key}.")));
                 }
             }
@@ -156,6 +187,8 @@ pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
     }
     let df = io::read_csv(data)?;
     match inv.command.as_str() {
+        "sum" | "mean" | "median" | "std" | "min" | "max" => statistics::run(df, inv),
+        "rolling" => rolling::run(df, inv),
         "columns" => columns::run(df, inv),
         "date" => date::run(df, inv),
         "diff" => diff::run(df, inv),

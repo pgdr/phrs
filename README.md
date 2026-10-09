@@ -116,6 +116,59 @@ cat a.csv | phrs diff x --periods=2
 cat a.csv | phrs diff --axis=1
 ```
 
+### Aggregate columns with `sum`, `mean`, `median`, `std`, `min`, `max`
+
+Each command reduces the input CSV to a **single-row CSV**, preserving the
+original column headers. By default reductions are column-wise (`--axis=0`).
+Select particular columns by name, or pass `--axis=1` to aggregate across
+columns and produce a single row indexed by the original row numbers.
+
+```bash
+cat a.csv | phrs sum                  # x,y / 33,63
+cat a.csv | phrs mean                 # x,y / 5.5,10.5
+cat a.csv | phrs median
+cat a.csv | phrs std                  # Sample standard deviation (ddof=1)
+cat a.csv | phrs min
+cat a.csv | phrs max
+cat a.csv | phrs sum x                # Reduce only column x
+cat a.csv | phrs mean --axis=1        # Mean of each input row
+cat a.csv | phrs std --ddof=0         # Population standard deviation
+cat a.csv | phrs mean --numeric_only=True
+cat a.csv | phrs sum --min_count=2
+cat a.csv | phrs mean --skipna=False
+```
+
+Missing numeric values are excluded by default; `--skipna=False` propagates
+missing values. `sum` defaults to zero for an entirely missing column (unless
+`--min_count` requests more observations). For mixed numeric/text data,
+`sum` concatenates text and `min` / `max` compare strings. `mean`, `median`
+and `std` require numeric columns unless `--numeric_only=True` is supplied.
+
+### Compute rolling statistics with `rolling`
+
+`rolling WINDOW [COLUMN ...]` computes a trailing window reduction. Its
+`--how` option accepts `sum` (the default), `mean`, `median`, `std`, `min`, and
+`max`. It returns a CSV with the **same number of rows**. Results are
+floating-point, and incomplete windows are blank by default.
+
+```bash
+cat a.csv | phrs rolling 3 --how=mean
+cat a.csv | phrs rolling 2 --how=sum
+cat a.csv | phrs rolling 3 --how=median
+cat a.csv | phrs rolling 5 --how=std --ddof=0
+cat a.csv | phrs rolling 7 x y --how=mean  # Preserve unselected columns
+cat a.csv | phrs rolling 3 --how=max --min_periods=1
+cat a.csv | phrs rolling 3 --how=mean --center=True
+```
+
+When specific column names are supplied, only those columns are replaced;
+other columns (such as timestamps) retain their original values and order.
+Without column names, rolling aggregates all numeric columns and excludes
+nonnumeric columns. `--min_periods` controls the minimum number of nonmissing
+observations (default: the window size). `--center=True` centers the output
+within each window. `std` uses sample standard deviation (`ddof=1`) unless
+another `--ddof` is supplied.
+
 ### Parse dates with `date`
 
 `date` converts a column to ISO-formatted dates. Numeric values are interpreted as days since the Unix epoch, or as Unix timestamps in seconds with `--utc=True`. String dates can use an explicit format or day-first parsing.
