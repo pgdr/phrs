@@ -9,6 +9,7 @@ pub mod query;
 pub mod rename;
 pub mod shape;
 pub mod show;
+pub mod slice;
 pub mod slugify;
 pub mod sort;
 pub mod strip;
@@ -97,6 +98,11 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
             }
             Ok(())
         }
+        "slice" => {
+            inv.no_options()?;
+            inv.arity(1, 1)
+        }
+
         "shape" => {
             inv.no_options()?;
             inv.arity(0, 0)
@@ -133,6 +139,7 @@ pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
         "tail" => tail::run(df, inv),
         "rename" => rename::run(df, inv),
         "sort" => sort::run(df, inv),
+        "slice" => slice::run(df, inv),
         "shape" => shape::run(df),
         "show" => show::run(df, inv),
         "query" => query::run(df, inv),

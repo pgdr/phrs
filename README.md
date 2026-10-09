@@ -72,6 +72,9 @@ cat a.csv | phrs head 3
 cat a.csv | phrs tail             # Last 10 rows (default)
 cat a.csv | phrs tail 3
 cat a.csv | phrs sort x           # Sort by column x
+cat a.csv | phrs slice :3         # First three rows
+cat a.csv | phrs slice 1:9:2      # Every second row from index 1
+cat a.csv | phrs slice ::-1       # Reverse the rows
 ```
 
 ### Rename and clean columns

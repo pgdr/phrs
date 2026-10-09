@@ -83,3 +83,14 @@ set -e
 ./ph_diff data/usa.csv diff cases
 
 ./ph_diff data/usa.csv date dateRep
+
+./ph_diff data/a.csv slice 1:9:2
+./ph_diff data/a.csv slice ::-1
+./ph_diff data/a.csv slice :3
+./ph_diff data/a.csv slice -3:
+./ph_diff data/a.csv slice ::2
+./ph_diff data/a.csv slice ::-2
+./ph_diff data/a.csv slice 5:0:-2
+./ph_diff data/a.csv slice -1:
+./ph_diff data/a.csv slice :
+./ph_diff data/a.csv slice 1:1

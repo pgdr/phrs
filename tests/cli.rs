@@ -308,3 +308,41 @@ fn diff_invalid_axis() {
     assert_ne!(code, 0);
     assert!(stdout.is_empty());
 }
+
+#[test]
+fn slice_python_compatible() {
+    let csv = b"x,y\n3,8\n4,9\n5,10\n6,11\n7,12\n8,13\n";
+    for (argument, expected) in [
+        ("1:9:2", "x,y\n4,9\n6,11\n8,13\n"),
+        ("::-1", "x,y\n8,13\n7,12\n6,11\n5,10\n4,9\n3,8\n"),
+        (":3", "x,y\n3,8\n4,9\n5,10\n"),
+        ("-3:", "x,y\n6,11\n7,12\n8,13\n"),
+        ("::-2", "x,y\n8,13\n6,11\n4,9\n"),
+        ("5:0:-2", "x,y\n8,13\n6,11\n4,9\n"),
+        (":", "x,y\n3,8\n4,9\n5,10\n6,11\n7,12\n8,13\n"),
+        ("1:1", "x,y\n"),
+        ("3:-1:-1", "x,y\n"),
+    ] {
+        let (code, stdout, stderr) = invoke(&["slice", argument], csv);
+        assert_eq!(
+            code,
+            0,
+            "{argument:?}: {}",
+            String::from_utf8_lossy(&stderr)
+        );
+        assert_eq!(stdout, expected.as_bytes(), "slice {argument}");
+    }
+}
+
+#[test]
+fn slice_rejects_invalid_input() {
+    for argument in ["1:2:0", "nonsense", "1:2:3:4", "a:b"] {
+        let (code, stdout, _) = invoke(&["slice", argument], CSV);
+        assert_ne!(code, 0, "slice {argument}");
+        assert!(stdout.is_empty());
+    }
+    let (code, _, _) = invoke(&["slice", ":", "extra"], CSV);
+    assert_ne!(code, 0);
+    let (code, _, _) = invoke(&["slice", ":", "--nope"], CSV);
+    assert_ne!(code, 0);
+}
