@@ -2,7 +2,9 @@ pub mod cat;
 pub mod columns;
 pub mod date;
 pub mod diff;
+pub mod dropna;
 pub mod eval;
+pub mod fillna;
 pub mod head;
 pub mod merge;
 pub mod open;
@@ -87,6 +89,30 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
             inv.arity(1, usize::MAX)?;
             for (key, _) in &inv.kwargs {
                 if !["how", "min_periods", "center", "ddof"].contains(&key.as_str()) {
+                    return Err(PhError::new(format!("Unknown option --{key}.")));
+                }
+            }
+            if let Some(flag) = inv.flags.first() {
+                return Err(PhError::new(format!("Unknown flag --{flag}.")));
+            }
+            Ok(())
+        }
+        "dropna" => {
+            inv.arity(0, 0)?;
+            for (key, _) in &inv.kwargs {
+                if !["axis", "how", "thresh"].contains(&key.as_str()) {
+                    return Err(PhError::new(format!("Unknown option --{key}.")));
+                }
+            }
+            if let Some(flag) = inv.flags.first() {
+                return Err(PhError::new(format!("Unknown flag --{flag}.")));
+            }
+            Ok(())
+        }
+        "fillna" => {
+            inv.arity(0, 1)?;
+            for (key, _) in &inv.kwargs {
+                if !["method", "limit"].contains(&key.as_str()) {
                     return Err(PhError::new(format!("Unknown option --{key}.")));
                 }
             }
@@ -190,6 +216,8 @@ pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
     match inv.command.as_str() {
         "sum" | "mean" | "median" | "std" | "min" | "max" => statistics::run(df, inv),
         "rolling" => rolling::run(df, inv),
+        "dropna" => dropna::run(df, inv),
+        "fillna" => fillna::run(df, inv),
         "columns" => columns::run(df, inv),
         "date" => date::run(df, inv),
         "diff" => diff::run(df, inv),

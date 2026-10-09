@@ -144,6 +144,40 @@ missing values. `sum` defaults to zero for an entirely missing column (unless
 `sum` concatenates text and `min` / `max` compare strings. `mean`, `median`
 and `std` require numeric columns unless `--numeric_only=True` is supplied.
 
+### Handle missing values with `dropna` and `fillna`
+
+`dropna` removes rows containing missing cells (`--axis=0`, the default),
+whereas `--axis=1` removes columns. By default, any missing cell causes the
+row/column to be removed; `--how=all` removes only entirely missing rows/columns.
+`--thresh=N` instead retains rows/columns containing at least N nonmissing
+cells. Missing values include CSV blanks, NaNs, and pandas' standard NA strings.
+
+```bash
+cat a.csv | phrs dropna
+cat a.csv | phrs dropna --how=all
+cat a.csv | phrs dropna --thresh=5
+cat a.csv | phrs dropna --axis=1
+```
+
+`fillna` replaces missing cells either with a scalar or using the closest
+preceding/following nonmissing value in the same column. Use `--method=pad` or
+`--method=ffill` for forward filling, and `--method=bfill` or
+`--method=backfill` for backward filling. A method and a scalar value are
+mutually exclusive.
+
+```bash
+cat a.csv | phrs fillna 0
+cat a.csv | phrs fillna 999.75
+cat a.csv | phrs fillna missing
+cat a.csv | phrs fillna --method=pad
+cat a.csv | phrs fillna --method=bfill --limit=7
+cat a.csv | phrs fillna 0 --limit=2
+```
+
+For a **method**, `--limit` caps the number of consecutive gaps filled per
+run. For a **scalar**, it caps the total number of missing values filled per
+column, following pandas' behavior.
+
 ### Compute rolling statistics with `rolling`
 
 `rolling WINDOW [COLUMN ...]` computes a trailing window reduction. Its

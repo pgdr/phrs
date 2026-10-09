@@ -96,3 +96,17 @@ set -e
 ./ph_diff data/a.csv slice 1:1
 
 ./ph_diff data/a.csv open excel data/sheet.xlsx
+
+./ph_diff data/covid.csv dropna
+./ph_diff data/covid.csv dropna --thresh=1
+./ph_diff data/covid.csv dropna --thresh=2
+./ph_diff data/covid.csv dropna --thresh=3
+./ph_diff data/covid.csv dropna --thresh=5
+./ph_diff data/covid.csv dropna --thresh=15
+./ph_diff data/covid.csv dropna --axis=1
+
+./ph_diff data/covid.csv fillna 42
+./ph_diff data/covid.csv fillna --method=pad
+
+./ph_diff data/a.csv rolling 5
+./ph_diff data/usa.csv rolling 3 cases
