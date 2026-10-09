@@ -1,8 +1,8 @@
 //! Rolling numeric window reductions. Windows align to the right by default,
 //! and match pandas' min_periods/window and sample-standard-deviation defaults.
+use super::statistics::{self, Statistic};
 use crate::{cli::Invocation, error::PhError, io};
 use polars::prelude::*;
-use super::statistics::{self, Statistic};
 
 // Sliding sum and mean run in O(n), independent of window size.
 fn sliding_sum_or_mean(
@@ -53,9 +53,9 @@ fn sliding_sum_or_mean(
 }
 
 pub fn run(mut df: DataFrame, inv: &Invocation) -> Result<Vec<u8>, PhError> {
-    let window = inv.args[0].parse::<usize>().map_err(|_| {
-        PhError::new("rolling window must be a positive integer.")
-    })?;
+    let window = inv.args[0]
+        .parse::<usize>()
+        .map_err(|_| PhError::new("rolling window must be a positive integer."))?;
     if window == 0 || window > isize::MAX as usize {
         return Err(PhError::new("rolling window must be a positive integer."));
     }
@@ -64,17 +64,19 @@ pub fn run(mut df: DataFrame, inv: &Invocation) -> Result<Vec<u8>, PhError> {
     let min_periods = if min_periods.is_empty() {
         window
     } else {
-        min_periods.parse::<usize>().map_err(|_| {
-            PhError::new("--min_periods must be a non-negative integer.")
-        })?
+        min_periods
+            .parse::<usize>()
+            .map_err(|_| PhError::new("--min_periods must be a non-negative integer."))?
     };
     if min_periods > window {
         return Err(PhError::new("--min_periods cannot exceed the window size."));
     }
     let center = statistics::boolean(inv.option("center").unwrap_or("False"), "center")?;
-    let ddof = inv.option("ddof").unwrap_or("1").parse::<i64>().map_err(|_| {
-        PhError::new("--ddof must be an integer.")
-    })?;
+    let ddof = inv
+        .option("ddof")
+        .unwrap_or("1")
+        .parse::<i64>()
+        .map_err(|_| PhError::new("--ddof must be an integer."))?;
 
     // With named columns, replace only those columns and leave the others
     // (e.g. date labels) unchanged. With no names, pandas' rolling reduction
@@ -83,7 +85,8 @@ pub fn run(mut df: DataFrame, inv: &Invocation) -> Result<Vec<u8>, PhError> {
     let names: Vec<String> = if explicit {
         inv.args[1..].to_vec()
     } else {
-        df.columns().iter()
+        df.columns()
+            .iter()
             .filter(|col| statistics::is_numeric(col.dtype()))
             .map(|col| col.name().to_string())
             .collect()
@@ -92,16 +95,20 @@ pub fn run(mut df: DataFrame, inv: &Invocation) -> Result<Vec<u8>, PhError> {
         return Err(PhError::new("rolling needs at least one numeric column."));
     }
     for name in &names {
-        let col = df.column(name.as_str()).map_err(|_| {
-            PhError::new(format!("Unknown column {name}."))
-        })?;
+        let col = df
+            .column(name.as_str())
+            .map_err(|_| PhError::new(format!("Unknown column {name}.")))?;
         if !statistics::is_numeric(col.dtype()) {
-            return Err(PhError::new(format!("rolling requires a numeric column: {name}.")));
+            return Err(PhError::new(format!(
+                "rolling requires a numeric column: {name}."
+            )));
         }
         let converted = col.cast(&DataType::Float64)?;
-        let data: Vec<Option<f64>> = converted.f64()?.iter().map(|item| {
-            item.filter(|v| v.is_finite())
-        }).collect();
+        let data: Vec<Option<f64>> = converted
+            .f64()?
+            .iter()
+            .map(|item| item.filter(|v| v.is_finite()))
+            .collect();
         let result = if matches!(statistic, Statistic::Sum | Statistic::Mean) {
             sliding_sum_or_mean(&data, window, center, min_periods, statistic)
         } else {

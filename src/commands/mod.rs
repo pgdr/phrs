@@ -9,12 +9,12 @@ pub mod open;
 pub mod query;
 pub mod rename;
 pub mod rolling;
-pub mod statistics;
 pub mod shape;
 pub mod show;
 pub mod slice;
 pub mod slugify;
 pub mod sort;
+pub mod statistics;
 pub mod strip;
 pub mod tail;
 
@@ -67,7 +67,8 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
         }
         "sum" | "mean" | "median" | "std" | "min" | "max" => {
             for (key, _) in &inv.kwargs {
-                if !["axis", "skipna", "numeric_only", "ddof", "min_count"].contains(&key.as_str()) {
+                if !["axis", "skipna", "numeric_only", "ddof", "min_count"].contains(&key.as_str())
+                {
                     return Err(PhError::new(format!("Unknown option --{key}.")));
                 }
                 if key == "ddof" && inv.command != "std" {

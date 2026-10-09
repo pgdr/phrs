@@ -81,9 +81,7 @@ fn csv_one_row(headers: &[String], values: &[String]) -> Result<Vec<u8>, PhError
     writer
         .write_record(values)
         .map_err(|e| PhError::new(e.to_string()))?;
-    writer
-        .into_inner()
-        .map_err(|e| PhError::new(e.to_string()))
+    writer.into_inner().map_err(|e| PhError::new(e.to_string()))
 }
 
 /// Compute sample standard deviation (pandas' default ddof is 1).
@@ -118,7 +116,7 @@ pub fn reduce_numeric(
             let mut sorted = values.to_vec();
             sorted.sort_by(f64::total_cmp);
             let mid = sorted.len() / 2;
-            if sorted.len() % 2 == 0 {
+            if sorted.len().is_multiple_of(2) {
                 Some(sorted[mid - 1] / 2.0 + sorted[mid] / 2.0)
             } else {
                 Some(sorted[mid])
@@ -178,14 +176,18 @@ fn column_value(
                 }
                 continue;
             }
-            ints.push(value.to_string().parse::<i128>().map_err(|_| {
-                PhError::new(format!("Invalid integer in '{}'.", column.name()))
-            })?);
+            ints.push(
+                value.to_string().parse::<i128>().map_err(|_| {
+                    PhError::new(format!("Invalid integer in '{}'.", column.name()))
+                })?,
+            );
         }
         return Ok(match statistic {
             Statistic::Sum if ints.len() < min_count => None,
             Statistic::Sum => {
-                let sum = ints.iter().try_fold(0_i128, |acc, &n| acc.checked_add(n))
+                let sum = ints
+                    .iter()
+                    .try_fold(0_i128, |acc, &n| acc.checked_add(n))
                     .ok_or_else(|| PhError::new("Integer overflow in sum."))?;
                 Some(sum.to_string())
             }
@@ -205,9 +207,8 @@ fn column_value(
     }
     // A Boolean sum is an integer count, whereas means and medians are float.
     if matches!(dtype, DataType::Boolean) && matches!(statistic, Statistic::Sum) {
-        return Ok((nums.len() >= min_count).then(|| {
-            nums.iter().filter(|&&v| v != 0.0).count().to_string()
-        }));
+        return Ok((nums.len() >= min_count)
+            .then(|| nums.iter().filter(|&&v| v != 0.0).count().to_string()));
     }
     if matches!(dtype, DataType::Boolean) && matches!(statistic, Statistic::Min | Statistic::Max) {
         return Ok(reduce_numeric(statistic, &nums, ddof, min_count)
@@ -224,20 +225,34 @@ pub fn run(df: DataFrame, inv: &Invocation) -> Result<Vec<u8>, PhError> {
         value => return Err(PhError::new(format!("Invalid axis: {value}."))),
     };
     let skipna = boolean(inv.option("skipna").unwrap_or("True"), "skipna")?;
-    let numeric_only = boolean(inv.option("numeric_only").unwrap_or("False"), "numeric_only")?;
-    let ddof = inv.option("ddof").unwrap_or("1").parse::<i64>()
+    let numeric_only = boolean(
+        inv.option("numeric_only").unwrap_or("False"),
+        "numeric_only",
+    )?;
+    let ddof = inv
+        .option("ddof")
+        .unwrap_or("1")
+        .parse::<i64>()
         .map_err(|_| PhError::new("--ddof must be an integer."))?;
-    let min_count = inv.option("min_count").unwrap_or("0").parse::<usize>()
+    let min_count = inv
+        .option("min_count")
+        .unwrap_or("0")
+        .parse::<usize>()
         .map_err(|_| PhError::new("--min_count must be a non-negative integer."))?;
 
     let names: Vec<String> = if inv.args.is_empty() {
-        df.get_column_names().iter().map(|n| n.to_string()).collect()
+        df.get_column_names()
+            .iter()
+            .map(|n| n.to_string())
+            .collect()
     } else {
         inv.args.clone()
     };
     let mut selected = Vec::new();
     for name in &names {
-        let col = df.column(name.as_str()).map_err(|_| PhError::new(format!("Unknown column {name}.")))?;
+        let col = df
+            .column(name.as_str())
+            .map_err(|_| PhError::new(format!("Unknown column {name}.")))?;
         if !numeric_only || is_numeric(col.dtype()) {
             selected.push(col);
         }
@@ -259,25 +274,44 @@ pub fn run(df: DataFrame, inv: &Invocation) -> Result<Vec<u8>, PhError> {
         }
         // pandas forms one homogeneous numeric Series before transposing it.
         // Mixed integer and floating columns therefore have floating results.
-        if float_present && !string_present && matches!(statistic, Statistic::Sum | Statistic::Min | Statistic::Max) {
+        if float_present
+            && !string_present
+            && matches!(statistic, Statistic::Sum | Statistic::Min | Statistic::Max)
+        {
             for value in &mut results {
-                if let Some(v) = value {
-                    if !v.chars().any(|c| matches!(c, '.' | 'e' | 'E')) && v != "True" && v != "False" {
-                        *v = float_csv(v.parse::<f64>().map_err(|_| PhError::new("Numeric conversion failed."))?);
-                    }
+                if let Some(v) = value
+                    && !v.chars().any(|c| matches!(c, '.' | 'e' | 'E'))
+                    && v != "True"
+                    && v != "False"
+                {
+                    *v = float_csv(
+                        v.parse::<f64>()
+                            .map_err(|_| PhError::new("Numeric conversion failed."))?,
+                    );
                 }
             }
         }
-        return csv_one_row(&headers, &results.into_iter().map(Option::unwrap_or_default).collect::<Vec<_>>());
+        return csv_one_row(
+            &headers,
+            &results
+                .into_iter()
+                .map(Option::unwrap_or_default)
+                .collect::<Vec<_>>(),
+        );
     }
     // pandas axis=1 returns a Series indexed by the original row numbers;
     // ph transposes that to a one-row CSV with 0,1,... headers.
     let integer_output = matches!(statistic, Statistic::Sum | Statistic::Min | Statistic::Max)
-        && selected.iter().all(|c| is_integer(c.dtype()) || matches!(c.dtype(), DataType::Boolean));
+        && selected
+            .iter()
+            .all(|c| is_integer(c.dtype()) || matches!(c.dtype(), DataType::Boolean));
     let mut columns = Vec::new();
     for col in selected {
         if !is_numeric(col.dtype()) {
-            return Err(PhError::new(format!("Cannot aggregate non-numeric column '{}' across rows.", col.name())));
+            return Err(PhError::new(format!(
+                "Cannot aggregate non-numeric column '{}' across rows.",
+                col.name()
+            )));
         }
         columns.push(col.cast(&DataType::Float64)?);
     }
@@ -291,7 +325,11 @@ pub fn run(df: DataFrame, inv: &Invocation) -> Result<Vec<u8>, PhError> {
                 _ => missing = true,
             }
         }
-        let result = if missing && !skipna { None } else { reduce_numeric(statistic, &nums, ddof, min_count) };
+        let result = if missing && !skipna {
+            None
+        } else {
+            reduce_numeric(statistic, &nums, ddof, min_count)
+        };
         values.push(match result {
             Some(v) if integer_output => format!("{v:.0}"),
             Some(v) => float_csv(v),
