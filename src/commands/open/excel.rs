@@ -6,12 +6,25 @@ use calamine::{Data, ExcelDateTime, Reader, open_workbook_auto};
 
 use crate::error::PhError;
 
-pub fn run(path: &str, sheet: Option<&str>) -> Result<Vec<u8>, PhError> {
+pub enum SheetSelector<'a> {
+    Name(&'a str),
+    Index(usize),
+}
+
+pub fn run(path: &str, sheet: Option<SheetSelector<'_>>) -> Result<Vec<u8>, PhError> {
     let mut workbook = open_workbook_auto(path)
         .map_err(|e| PhError::new(format!("Cannot open Excel workbook {path:?}: {e}")))?;
     let names = workbook.sheet_names();
     let name = match sheet {
-        Some(requested) => {
+        Some(SheetSelector::Index(index)) => {
+            names.get(index).map(String::as_str).ok_or_else(|| {
+                PhError::new(format!(
+                    "Worksheet index {index} out of range for {path:?} ({} worksheets).",
+                    names.len()
+                ))
+            })?
+        }
+        Some(SheetSelector::Name(requested)) => {
             if !names.iter().any(|name| name == requested) {
                 return Err(PhError::new(format!(
                     "Worksheet {requested:?} not found in {path:?}. Available worksheets: {}.",

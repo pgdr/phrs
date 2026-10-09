@@ -28,7 +28,11 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
                     inv.args[0]
                 )));
             }
-            if let Some((key, _)) = inv.kwargs.iter().find(|(key, _)| key != "sheet") {
+            if let Some((key, _)) = inv
+                .kwargs
+                .iter()
+                .find(|(key, _)| !matches!(key.as_str(), "sheet" | "sheet_name"))
+            {
                 return Err(PhError::new(format!("Unknown option --{key}.")));
             }
             if let Some(flag) = inv.flags.first() {

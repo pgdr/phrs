@@ -375,6 +375,53 @@ fn open_excel_named_worksheet() {
 }
 
 #[test]
+fn open_excel_sheet_name_index() {
+    let file = excel_fixture();
+    // Match pandas: sheet_name=1 selects the second worksheet (zero-based).
+    let (code, stdout, stderr) = invoke(&["open", "excel", "--sheet_name=1", &file], b"");
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"id,value\n1,alternative\n2,two\n");
+}
+
+#[test]
+fn open_excel_sheet_name_by_name() {
+    let file = excel_fixture();
+    let (code, stdout, stderr) = invoke(&["open", "excel", "--sheet_name=Other", &file], b"");
+    assert_eq!(code, 0, "{}", String::from_utf8_lossy(&stderr));
+    assert_eq!(stdout, b"id,value\n1,alternative\n2,two\n");
+}
+
+#[test]
+fn open_excel_sheet_name_invalid_index_is_an_error() {
+    let file = excel_fixture();
+    let (code, stdout, stderr) = invoke(&["open", "excel", "--sheet_name=9", &file], b"");
+    assert_ne!(code, 0);
+    assert!(stdout.is_empty());
+    assert!(String::from_utf8_lossy(&stderr).contains("Worksheet index 9 out of range"));
+}
+
+#[test]
+fn open_excel_negative_sheet_index_is_an_error() {
+    let file = excel_fixture();
+    let (code, stdout, stderr) = invoke(&["open", "excel", "--sheet_name=-1", &file], b"");
+    assert_ne!(code, 0);
+    assert!(stdout.is_empty());
+    assert!(String::from_utf8_lossy(&stderr).contains("must be non-negative"));
+}
+
+#[test]
+fn open_excel_conflicting_sheet_selectors_are_an_error() {
+    let file = excel_fixture();
+    let (code, stdout, stderr) = invoke(
+        &["open", "excel", &file, "--sheet=Other", "--sheet_name=1"],
+        b"",
+    );
+    assert_ne!(code, 0);
+    assert!(stdout.is_empty());
+    assert!(String::from_utf8_lossy(&stderr).contains("Specify either --sheet or --sheet_name"));
+}
+
+#[test]
 fn open_excel_missing_sheet_is_an_error() {
     let file = excel_fixture();
     let (code, stdout, stderr) = invoke(&["open", "excel", &file, "--sheet=Unknown"], b"");

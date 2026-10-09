@@ -138,11 +138,14 @@ cat a.csv | phrs show --no-index  # Omit the generated row index
 
 `open excel` reads the first worksheet of an `.xls`, `.xlsx`, `.xlsm`, or
 `.xlsb` file and writes CSV to standard output. Use `--sheet=NAME` to select
-another worksheet. Unlike ordinary commands, it reads the named file, not stdin.
+another worksheet, or `--sheet_name=N` to select a zero-based worksheet index
+(as in `ph` and pandas). `--sheet_name=NAME` also accepts worksheet names.
+Unlike ordinary commands, it reads the named file, not stdin.
 
 ```bash
 phrs open excel data.xls
 phrs open excel data.xlsx --sheet=Measurements
+phrs open excel data.xlsx --sheet_name=1  # Second worksheet
 phrs open excel data.xls | phrs head 10
 ```
 
