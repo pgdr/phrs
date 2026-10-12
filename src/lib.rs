@@ -1,6 +1,7 @@
 pub mod cli;
 mod commands;
 mod compat;
+pub use compat::describe::Describable;
 pub mod error;
 mod io;
 

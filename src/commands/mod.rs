@@ -1,6 +1,7 @@
 pub mod cat;
 pub mod columns;
 pub mod date;
+pub mod describe;
 pub mod diff;
 pub mod dropna;
 pub mod eval;
@@ -141,6 +142,11 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
             Ok(())
         }
 
+        "describe" => {
+            inv.no_options()?;
+            inv.arity(0, 0)
+        }
+
         "diff" => {
             if let Some((key, _)) = inv
                 .kwargs
@@ -220,6 +226,7 @@ pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
         "fillna" => fillna::run(df, inv),
         "columns" => columns::run(df, inv),
         "date" => date::run(df, inv),
+        "describe" => describe::run(df),
         "diff" => diff::run(df, inv),
         "head" => head::run(df, inv),
         "tail" => tail::run(df, inv),
