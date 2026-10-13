@@ -1,4 +1,4 @@
-# phrs — the tabular data shell tool
+# phrs — the tabular data shell tool ![phrs tests](https://github.com/pgdr/phrs/actions/workflows/rustapp.yml/badge.svg)
 
 `phrs` is a Rust command-line tool for manipulating CSV data in Unix pipelines. It is inspired by [ph](https://github.com/pgdr/ph) and uses [Polars](https://pola.rs/) for tabular operations.
 
