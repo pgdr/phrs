@@ -2,6 +2,16 @@
 
 set -e
 
+./ph_diff data/complex.csv round score
+./ph_diff data/complex.csv round score --decimals=1
+./ph_diff data/complex.csv round score --decimals=2
+./ph_diff data/complex.csv round score --decimals=3
+
+./ph_diff data/iris.csv round setosa
+./ph_diff data/iris.csv round setosa --decimals=1
+./ph_diff data/iris.csv round setosa --decimals=2
+./ph_diff data/iris.csv round setosa --decimals=3
+
 ./ph_diff data/a.csv columns
 ./ph_diff data/a.csv columns y x
 ./ph_diff data/a.csv head
