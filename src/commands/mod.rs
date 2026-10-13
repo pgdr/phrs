@@ -7,11 +7,13 @@ pub mod dropna;
 pub mod eval;
 pub mod fillna;
 pub mod head;
+pub mod help;
 pub mod merge;
 pub mod open;
 pub mod query;
 pub mod rename;
 pub mod rolling;
+pub mod round;
 pub mod shape;
 pub mod show;
 pub mod slice;
@@ -122,6 +124,20 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
             }
             Ok(())
         }
+        "help" => {
+            inv.no_options()?;
+            inv.arity(0, 1)
+        }
+        "round" => {
+            inv.arity(1, 2)?;
+            if let Some((key, _)) = inv.kwargs.iter().find(|(key, _)| key != "decimals") {
+                return Err(PhError::new(format!("Unknown option --{key}.")));
+            }
+            if let Some(flag) = inv.flags.first() {
+                return Err(PhError::new(format!("Unknown flag --{flag}.")));
+            }
+            Ok(())
+        }
         "columns" => inv.no_options(),
         "date" => {
             inv.arity(1, 1)?;
@@ -209,6 +225,9 @@ pub fn validate(inv: &Invocation) -> Result<(), PhError> {
 }
 
 pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
+    if inv.command == "help" {
+        return help::run(inv);
+    }
     if inv.command == "open" {
         return open::run(inv);
     }
@@ -222,6 +241,7 @@ pub fn execute(inv: &Invocation, data: &[u8]) -> Result<Vec<u8>, PhError> {
     match inv.command.as_str() {
         "sum" | "mean" | "median" | "std" | "min" | "max" => statistics::run(df, inv),
         "rolling" => rolling::run(df, inv),
+        "round" => round::run(df, inv),
         "dropna" => dropna::run(df, inv),
         "fillna" => fillna::run(df, inv),
         "columns" => columns::run(df, inv),

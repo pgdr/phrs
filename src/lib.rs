@@ -38,6 +38,7 @@ pub fn execute_io(
     commands::validate(&invocation)?;
     let mut bytes = Vec::new();
     if invocation.command != "open"
+        && invocation.command != "help"
         && invocation.command != "merge"
         && !(invocation.command == "cat" && !invocation.args.is_empty())
     {

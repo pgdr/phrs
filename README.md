@@ -54,6 +54,17 @@ cat a.csv | phrs show
 
 `show` produces terminal output rather than CSV; it is normally the last command in a pipeline.
 
+## Command help
+
+`help` lists all implemented commands and gives usage details for a specific
+command. It does not read standard input.
+
+```bash
+phrs help
+phrs help round
+phrs help describe
+```
+
 ## Commands
 
 ### Inspect and select columns
@@ -104,6 +115,21 @@ cat a.csv | phrs eval 'z = x + y'
 cat a.csv | phrs eval 'z = x**2 + y'
 cat a.csv | phrs eval 'z = (x + y) / 2'
 cat a.csv | phrs eval 'x**2'       # Output only the computed column
+```
+
+### Round numerical columns with `round`
+
+`round COLUMN [DECIMALS]` rounds the selected numeric column; the default
+precision is zero decimal places. You can also write `--decimals=N`. Negative
+precisions round to tens, hundreds, etc. Halfway values round to the nearest
+even multiple (the same convention as pandas). Other columns, and missing
+values, are preserved. Integer columns use exact integer arithmetic.
+
+```bash
+cat a.csv | phrs round x
+cat a.csv | phrs round x 2
+cat a.csv | phrs round x --decimals=2
+cat a.csv | phrs round x --decimals=-1
 ```
 
 ### Compute differences with `diff`
